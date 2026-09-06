@@ -353,16 +353,70 @@ agg_admit_dow <- adm %>%
     admissions = n(), .groups = "drop")
 
 # --- 7g. occupancy / census (operational) ---------------------------------
-# Approximate mid-month census: count admissions overlapping the 15th of a month.
-census_days <- seq(ANALYSIS_START, ANALYSIS_END, by = "month") + 14
+# Average daily census (ADC) per month = inpatient patient-days that month /
+# days in month. Patient-days (rather than a single mid-month head-count) give a
+# stable estimate from this relatively small synthetic acute cohort -- the old
+# one-day snapshot frequently caught 0-2 patients and rounded occupancy to 0%.
+#
+# The synthetic population is only a small sample of each facility's real
+# catchment, so raw ADC sits far below the fictional staffed-bed counts. We
+# apply a transparent per-facility panel-scale factor, solved so each hospital
+# averages TARGET_OCCUPANCY over the window (month-to-month seasonality still
+# moves occupancy around that level). This touches the census / occupancy views
+# only; rate metrics (readmission, LOS O/E, mortality) are untouched. The median
+# scale is recorded in meta and the method is shown on the Methodology tab.
+#
+# The output grid is DENSE: every facility x service line x month has a row
+# (census = 0 when nobody was inpatient), so period averages downstream are not
+# biased upward by dropping empty months.
+TARGET_OCCUPANCY <- 0.72
+
 occ <- adm %>%
   select(facility, region, service_line, start_date, stop_date) %>%
   as.data.table()
-agg_census <- rbindlist(lapply(census_days, function(d) {
-  occ[start_date <= d & stop_date >= d,
-      .(census = .N), by = .(facility, region, service_line)][
-        , snapshot := as.Date(d)][]
+
+month_starts <- seq(ANALYSIS_START, floor_date(ANALYSIS_END, "month"), by = "month")
+patient_days <- rbindlist(lapply(month_starts, function(m0) {
+  dim_days <- as.integer(days_in_month(m0))
+  m_last   <- m0 + (dim_days - 1L)                       # last calendar day
+  occ[stop_date >= m0 & start_date <= m_last,
+      .(pdays = sum(pmax(
+          as.numeric(pmin(stop_date, m_last) - pmax(start_date, m0)) + 1, 0))),
+      by = .(facility, region, service_line)][
+        , `:=`(snapshot = m0 + 14L, adc_raw = pdays / dim_days)][]
 }))
+
+window_days <- as.numeric(ANALYSIS_END - ANALYSIS_START + 1)
+# Per-facility scale so each hospital averages TARGET_OCCUPANCY over the window,
+# while month-to-month seasonality still moves occupancy around that level.
+fac_scale <- patient_days[, .(raw_adc = sum(pdays) / window_days), by = facility]
+fac_scale[, beds := facility_roster$beds[match(facility, facility_roster$facility)]]
+fac_scale[, scale := (TARGET_OCCUPANCY * beds) / raw_adc]
+
+reg_map  <- setNames(facility_roster$region, facility_roster$facility)
+census_grid <- CJ(facility     = facility_roster$facility,
+                  service_line = sort(unique(enc$service_line)),
+                  snapshot     = as.Date(month_starts + 14L))
+census_grid[, region := reg_map[facility]]
+
+agg_census <- patient_days[fac_scale, on = "facility"][
+  , .(facility, service_line, snapshot, census = adc_raw * scale)]
+agg_census <- agg_census[census_grid, on = .(facility, service_line, snapshot)][
+  is.na(census), census := 0]
+setcolorder(agg_census, c("facility", "region", "service_line", "snapshot", "census"))
+
+# 3-month centred smoothing: the acute cohort is small, so a single long stay in
+# a low-volume service line can spike one month's scaled census. Consistent with
+# the quarterly rollups used for the readmission / LOS trends.
+setorder(agg_census, facility, service_line, snapshot)
+agg_census[, census_raw := census]
+agg_census[, census := frollmean(census, 3, align = "center"), by = .(facility, service_line)]
+agg_census[is.na(census), census := census_raw][, census_raw := NULL]
+PANEL_SCALE <- stats::median(fac_scale$scale)
+
+msg(sprintf("  census: raw system ADC %.2f, per-facility panel scale %.0f-%.0fx, target occ %.0f%%",
+            sum(patient_days$pdays) / window_days,
+            min(fac_scale$scale), max(fac_scale$scale), 100 * TARGET_OCCUPANCY))
 
 # --- 7h. top conditions driving admissions -----------------------------
 agg_top_conditions <- adm %>%
@@ -427,6 +481,8 @@ meta <- list(
   source         = "Synthea synthetic patient generator (Massachusetts, seed 20240101, ~2,000 living patients)",
   facilities     = sort(unique(enc$facility)),
   facility_beds  = setNames(facility_roster$beds, facility_roster$facility),
+  panel_scale    = PANEL_SCALE,
+  target_occupancy = TARGET_OCCUPANCY,
   regions        = sort(unique(enc$region)),
   service_lines  = sort(unique(enc$service_line)),
   payer_types    = sort(unique(enc$payer_type)),

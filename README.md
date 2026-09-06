@@ -17,7 +17,7 @@ proxies** — sliced by facility, service line, payer and time.
 
 - **Two persona views** toggled from the top navigation:
   - **Operational Leader** — throughput and capacity: encounter volume by month
-    and type, LOS trend vs expected, mid-month bed occupancy, arrivals by day of
+    and type, LOS trend vs expected, average daily census vs beds, arrivals by day of
     week, discharge-disposition mix.
   - **Clinical Leader** — quality and outcomes: 30-day all-cause readmission
     rate (trend + benchmark), observed/expected LOS by service line, mortality
@@ -164,7 +164,8 @@ Rscript data_prep.R
 | **30-day mortality proxy** | Share of admissions where the patient's (model-generated) death date is between admission and 30 days post-discharge. |
 | **Complication proxy** | Share of admissions with a condition matching a hospital-acquired-complication keyword list (sepsis, C. difficile, pressure injury, catheter-associated infection, DVT/PE, AKI, …) during the stay or within 14 days. Not a validated PSI. |
 | **Discharge disposition** | Synthesised from the next encounter within ~3 days of discharge: Expired / Hospice / Skilled Nursing Facility / Home with Home Health / Home – Self-Care. |
-| **Bed occupancy** | Mid-month census (admissions overlapping the 15th) ÷ the facility's fictional staffed-bed count, averaged over the period. |
+| **Average daily census (ADC)** | Inpatient patient-days in a month ÷ days in month, 3-month centred smoothing. Multiplied by a per-facility panel-scale factor (the synthetic cohort is a small sample of each facility's catchment) solved so each hospital averages ~72% occupancy over the window; seasonality still moves it around that level. Affects the census/occupancy views only. |
+| **Bed occupancy** | Scaled ADC ÷ the facility's fictional staffed-bed count, averaged over the selected period. |
 | **Tile trend indicator** | Selected period split in half; recent half vs earlier half; colour = favourable/unfavourable for that metric. |
 
 ---
@@ -193,6 +194,12 @@ recent window) and fails if any output errors.
 - **Quarterly** trend rollups for readmissions and LOS (monthly for volume)
   because the synthetic acute population is ~1,000 admissions over 11 years and
   monthly rates would be too noisy.
+- **Panel-scaled census.** The same ~1,000-admission cohort gives a raw
+  average daily census near zero against realistic bed counts, so occupancy
+  rounded to 0%. Census is now computed from monthly patient-days (not a
+  single-day head-count), smoothed over 3 months, and multiplied by a
+  per-facility scale factor solved so each hospital averages ~72% occupancy.
+  Scaling touches the census/occupancy views only — rate metrics are unscaled.
 - **Pre-aggregated `.rds`** as the app's data source so first paint is instant
   and no patient-level data is shipped to the browser.
 

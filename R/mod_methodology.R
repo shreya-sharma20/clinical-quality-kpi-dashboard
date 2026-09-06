@@ -70,8 +70,17 @@ methodologyUI <- function(id, meta) {
         tags$dt("Discharge disposition"),
         tags$dd("Synthesised from downstream events: Expired (death in stay), Hospice, Skilled Nursing Facility, Home with Home Health, or Home / Self-Care - based on the next encounter within ~3 days of discharge."),
 
-        tags$dt("Bed occupancy"),
-        tags$dd("Mid-month census (admissions overlapping the 15th) divided by the facility's fictional staffed-bed count, averaged over the selected period."),
+        tags$dt("Average daily census (ADC) & bed occupancy"),
+        tags$dd(sprintf(
+          paste0("Monthly ADC = inpatient patient-days that month / days in month, with ",
+                 "3-month centred smoothing. Because the synthetic cohort is only a small ",
+                 "sample of each facility's catchment, raw ADC is multiplied by a per-facility ",
+                 "panel-scale factor (median ~%.0fx) solved so each hospital averages ~%.0f%% ",
+                 "occupancy over the window; month-to-month seasonality still moves it around ",
+                 "that level. Occupancy = scaled ADC / fictional staffed-bed count, averaged ",
+                 "over the selected period. This scaling affects the census / occupancy views ",
+                 "only; readmission, LOS and mortality metrics use the unscaled data."),
+          meta$panel_scale, 100 * meta$target_occupancy)),
 
         tags$dt("Trend indicator on KPI tiles"),
         tags$dd("The selected period is split in half; the tile compares the recent half to the earlier half. Arrow colour reflects whether the movement is favourable for that metric (e.g. a falling readmission rate is green).")

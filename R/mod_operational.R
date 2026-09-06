@@ -33,7 +33,8 @@ operationalUI <- function(id) {
         plotlyOutput(ns("los_trend"), height = 290)
       ),
       card(
-        card_header("Mid-month inpatient census vs staffed beds"),
+        card_header("Average daily census vs staffed beds",
+                    span(class = "card-hint", "Mean over the selected period")),
         plotlyOutput(ns("occupancy"), height = 290)
       )
     ),
@@ -180,7 +181,10 @@ operationalServer <- function(id, data, filters) {
       if (length(filters$service_lines())) cen <- cen[cen$service_line %in% filters$service_lines(), ]
       validate(need(nrow(cen) > 0, "No data for the current filter selection"))
       beds <- data$meta$facility_beds
-      d <- cen %>% group_by(facility) %>%
+      d <- cen %>%
+        group_by(facility, snapshot) %>%
+        summarise(census = sum(census), .groups = "drop") %>%
+        group_by(facility) %>%
         summarise(census = mean(census), .groups = "drop") %>%
         mutate(beds = beds[facility],
                occ = census / beds) %>%
