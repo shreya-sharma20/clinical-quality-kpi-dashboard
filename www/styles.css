@@ -1,0 +1,99 @@
+/* ============================================================================
+   Clinical KPI & Quality Dashboard -- custom styling on top of the bslib theme
+   ========================================================================== */
+
+:root {
+  --ck-navy:  #0B3C5D;
+  --ck-teal:  #1D7874;
+  --ck-slate: #5A6B7B;
+  --ck-grid:  #E6EAEE;
+  --ck-bg:    #FBFCFD;
+}
+
+body { background: var(--ck-bg); }
+
+/* ---- brand / navbar ---- */
+.navbar { box-shadow: 0 1px 0 rgba(0,0,0,.12); }
+.brand { font-weight: 700; letter-spacing: .2px; display: inline-flex; align-items: center; gap: .55rem; }
+.brand-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 7px;
+  background: #ffffff; color: var(--ck-navy);
+  font-weight: 800; font-size: 1.1rem; line-height: 1;
+}
+.navbar .nav-link { font-weight: 500; }
+.navbar .nav-link.active { font-weight: 700; border-bottom: 3px solid #ffffff; }
+.nav-ext, .nav-ext:hover { color: rgba(255,255,255,.85) !important; font-weight: 500; }
+
+/* ---- persona intro strip ---- */
+.persona-intro {
+  background: #EEF3F6;
+  border-left: 4px solid var(--ck-teal);
+  color: #23303c;
+  padding: .6rem .9rem;
+  border-radius: .4rem;
+  margin-bottom: 1rem;
+  font-size: .92rem;
+}
+
+/* ---- sidebar ---- */
+.sidebar-section-title,
+.app-sidebar .sidebar-section-title {
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .09em;
+  font-weight: 700;
+  color: var(--ck-slate);
+  margin-bottom: .4rem;
+}
+.sidebar-note {
+  font-size: .78rem;
+  line-height: 1.35;
+  color: #3d4b57;
+  margin-top: .6rem;
+}
+.sidebar-note .fa { margin-right: .3rem; color: var(--ck-teal); }
+
+/* ---- cards ---- */
+.card { box-shadow: 0 1px 3px rgba(16,32,48,.06); }
+.card-header {
+  font-weight: 650;
+  color: var(--ck-navy);
+  background: #fff;
+  border-bottom: 1px solid var(--ck-grid);
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem;
+}
+.card-hint {
+  font-weight: 400;
+  font-size: .8rem;
+  color: var(--ck-slate);
+}
+
+/* ---- KPI value boxes ---- */
+.kpi-box {
+  border: 1px solid var(--ck-grid);
+  box-shadow: 0 1px 3px rgba(16,32,48,.06);
+}
+.kpi-box .value-box-title {
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .06em;
+  color: var(--ck-slate);
+  font-weight: 700;
+}
+.kpi-box .value-box-value { font-size: 1.9rem; font-weight: 750; color: var(--ck-navy); }
+.kpi-delta { font-size: .8rem; margin: .1rem 0 0; }
+
+/* ---- methodology ---- */
+.methodology { max-width: 920px; line-height: 1.55; }
+.methodology h4 { color: var(--ck-navy); margin-top: 1.6rem; font-weight: 700; }
+.methodology dt { color: #23303c; margin-top: .6rem; }
+.methodology dd { color: #3d4b57; margin-left: 1rem; }
+.methodology pre {
+  background: #0B3C5D; color: #E9F1F6;
+  padding: 1rem; border-radius: .5rem; font-size: .82rem;
+}
+
+/* ---- misc ---- */
+.form-control, .selectpicker + .dropdown-toggle { border-color: var(--ck-grid); }
+hr { border-color: var(--ck-grid); }

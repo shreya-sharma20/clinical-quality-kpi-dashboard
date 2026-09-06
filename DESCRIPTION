@@ -1,0 +1,31 @@
+Package: clinicalKpiDashboard
+Title: Clinical KPI & Quality Dashboard (Synthea demo)
+Version: 1.0.0
+Authors@R:
+    person("Shreya", "S", email = "sshreya319@gmail.com", role = c("aut", "cre"))
+Description: A portfolio R Shiny dashboard presenting operational and clinical
+    quality KPIs (encounter volume, length of stay, 30-day readmissions,
+    outcome proxies) derived from synthetic Synthea patient data. Not for
+    clinical use.
+License: MIT
+Encoding: UTF-8
+Depends:
+    R (>= 4.1)
+Imports:
+    shiny,
+    bslib,
+    plotly,
+    reactable,
+    shinyWidgets,
+    htmlwidgets,
+    data.table,
+    dplyr,
+    tidyr,
+    lubridate,
+    stringr,
+    tibble,
+    rlang,
+    scales,
+    arrow,
+    R.utils
+SystemRequirements: Java (>= 17) only if regenerating Synthea data

@@ -1,0 +1,27 @@
+# Synthea working dir (large jar + JDK + raw generator output)
+/synthea/
+
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# OS
+.DS_Store
+Thumbs.db
+
+# tooling
+.claude/
+.Rproj.user/
+
+# scratch
+/scratch/
+*.log
+
+# Keep the processed marts and the (small, gzipped) raw sample so the app
+# runs out-of-the-box:
+!data/raw/*.csv.gz
+!data/processed/*.rds
+!data/processed/*.parquet
