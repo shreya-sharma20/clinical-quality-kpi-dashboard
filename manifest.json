@@ -2473,9 +2473,6 @@
     }
   },
   "files": {
-    ".claude/agents/clinical-kpi-dashboard.md": {
-      "checksum": "47807fbde563e83cbb45bcc29f7f1961"
-    },
     ".Rbuildignore": {
       "checksum": "87f9d4ec0ffedff42d9aa1a7e04c6c96"
     },
